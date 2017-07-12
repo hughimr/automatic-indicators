@@ -65,46 +65,46 @@ GROUP BY PART_ID
 ) PVAL_TBL ON PARTITIONS.PART_ID=PVAL_TBL.PART_ID 
 INNER JOIN SDS ON PARTITIONS.SD_ID=SDS.SD_ID
 ) PKEY_INFO ON TBLS_f.TBL_ID=PKEY_INFO.TBL_ID
-left JOIN SDS ON TBLS_f.SD_ID=SDS.SD_ID;">$AI_TEMP/temp_hive_raw
+left JOIN SDS ON TBLS_f.SD_ID=SDS.SD_ID;">${AI_TEMP}/temp_hive_raw
 #去掉hive元数据路径中的hdfs://hadoop-ha-mail/
-awk -F '\t' '{gsub(/hdfs:\/\/[^\/]*/,"",$5);print $0}' OFS='\t' $AI_TEMP/temp_hive_raw>$AI_TEMP/temp_hive_metadata
+awk -F '\t' '{gsub(/hdfs:\/\/[^\/]*/,"",$5);print $0}' OFS='\t' ${AI_TEMP}/temp_hive_raw>${AI_TEMP}/temp_hive_metadata
 
 
 #解析temp_hive_metadata中集群路径到二级目录
-hdfs_dir=(`awk -F '\t' '{print $5}' $AI_TEMP/temp_hive_metadata|sed -r 's#/([^/]*/[^/]*).*#/\1#g' |sort -u`)
+hdfs_dir=(`awk -F '\t' '{print $5}' ${AI_TEMP}/temp_hive_metadata|sed -r 's#/([^/]*/[^/]*).*#/\1#g' |sort -u`)
 #读取hdfs中目录对应的元数据
-rm $AI_TEMP/temp_hdfs_metadata
+rm ${AI_TEMP}/temp_hdfs_metadata
 for ed in ${hdfs_dir[*]};do 
-    hadoop fs -ls -R $ed|grep ^- >>$AI_TEMP/temp_hdfs_metadata
+    hadoop fs -ls -R ${ed}|grep ^- >>${AI_TEMP}/temp_hdfs_metadata
 done 
 
 #解析hdfs数据为：目录   文件路径    文件时间
-awk '{a=$8;gsub(/\/[^\/]*$/,"",$8);print $8,a,$6"_"$7}' OFS='\t' $AI_TEMP/temp_hdfs_metadata>$AI_TEMP/temp_hdfs_file
+awk '{a=$8;gsub(/\/[^\/]*$/,"",$8);print $8,a,$6"_"$7}' OFS='\t' ${AI_TEMP}/temp_hdfs_metadata>${AI_TEMP}/temp_hdfs_file
 
 #关联路径和路径下的文件,并重新提取hdfs中没有匹配到的目录
-awk -F '\t' 'NR==FNR{a[$5]=$0}NR>FNR{if($1 in a){print a[$1],$2,$3>"'$AI_TEMP'/temp_hive_data";b[$1]=1;}}END{for(i in a){if(b[i]!=1){print a[i]>"'$AI_TEMP'/temp_hive_remain"}}}' OFS='\t' $AI_TEMP/temp_hive_metadata $AI_TEMP/temp_hdfs_file
+awk -F '\t' 'NR==FNR{a[$5]=$0}NR>FNR{if($1 in a){print a[$1],$2,$3>"'${AI_TEMP}'/temp_hive_data";b[$1]=1;}}END{for(i in a){if(b[i]!=1){print a[i]>"'${AI_TEMP}'/temp_hive_remain"}}}' OFS='\t' ${AI_TEMP}/temp_hive_metadata ${AI_TEMP}/temp_hdfs_file
 
 if [ -f "$AI_TEMP/temp_hive_remain" ];then 
 #重新提取hdfs中没有匹配到的目录
-rm $AI_TEMP/temp_hdfs_meta_again
+rm ${AI_TEMP}/temp_hdfs_meta_again
 while read line;do
-    _dir=`echo $line|awk -F '\t' '{print $5}'`
-    hadoop fs -ls -R $_dir|grep ^->>$AI_TEMP/temp_hdfs_meta_again
-done<$AI_TEMP/temp_hive_remain
+    _dir=`echo ${line}|awk -F '\t' '{print $5}'`
+    hadoop fs -ls -R ${_dir}|grep ^->>${AI_TEMP}/temp_hdfs_meta_again
+done<${AI_TEMP}/temp_hive_remain
     
 #--
 #--解析hdfs数据为：目录   文件路径    文件时间
-awk '{a=$8;gsub(/\/[^\/]*$/,"",$8);print $8,a,$6"_"$7}' OFS='\t' $AI_TEMP/temp_hdfs_meta_again>$AI_TEMP/temp_hdfs_file_again
+awk '{a=$8;gsub(/\/[^\/]*$/,"",$8);print $8,a,$6"_"$7}' OFS='\t' ${AI_TEMP}/temp_hdfs_meta_again>${AI_TEMP}/temp_hdfs_file_again
 
 #关联路径和路径下的文件,并重新提取hdfs中没有匹配到的目录
-awk -F '\t' 'NR==FNR{a[$5]=$0}NR>FNR{if($1 in a){print a[$1],$2,$3;a[$1]=1;}}END{for(i in a){if(a[i]!=1){print a[i],"",""}}}' OFS='\t' $AI_TEMP/temp_hive_remain $AI_TEMP/temp_hdfs_file_again>>$AI_TEMP/temp_hive_data
+awk -F '\t' 'NR==FNR{a[$5]=$0}NR>FNR{if($1 in a){print a[$1],$2,$3;a[$1]=1;}}END{for(i in a){if(a[i]!=1){print a[i],"",""}}}' OFS='\t' ${AI_TEMP}/temp_hive_remain ${AI_TEMP}/temp_hdfs_file_again>>${AI_TEMP}/temp_hive_data
 fi
 
 #插入是否更新信息
-awk '{print $0,"0"}' OFS='\t' $AI_TEMP/temp_hive_data>$AI_TEMP/temp_hive_final
+awk '{print $0,"0"}' OFS='\t' ${AI_TEMP}/temp_hive_data>${AI_TEMP}/temp_hive_final
 
 #插入数据到oracle中
-data_insert_kdb -file $AI_TEMP/temp_hive_final -table LW_PJ_AI_TABLES_METADATA -keys db,tablename,partition_dir,filepath,filedate
+data_insert_kdb -file ${AI_TEMP}/temp_hive_final -table LW_PJ_AI_TABLES_METADATA -keys db,tablename,partition_dir,filepath,filedate
 
 
 
