@@ -1,0 +1,1 @@
+hive##gzkdb.one_cashier_order##ds='`date +%F -d "-1day"`'

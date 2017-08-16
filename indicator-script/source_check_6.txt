@@ -1,0 +1,1 @@
+hive##gzkdb.kdb_order_buy_detail##ds='`date +%F -d "-1day"`'

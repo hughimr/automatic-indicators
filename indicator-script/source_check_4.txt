@@ -1,0 +1,1 @@
+hive##gzstat.one_countly##ds='`date +%F -d "-1day"`' and terminal like '%kuaiduobao%'

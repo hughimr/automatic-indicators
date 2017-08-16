@@ -1,0 +1,4 @@
+hive##gzkdb.kdb_order_buy_detail##ds='`date +%F -d "-1day"`'
+hive##gzstat.proposal_rps##
+hive##gzstat.redpack_convconfig##
+hive##gzstat.rpadmin_proposal##
