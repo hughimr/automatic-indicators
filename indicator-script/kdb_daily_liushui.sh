@@ -36,7 +36,9 @@ where otype in(20,23)
 group by ds
 ;"|awk -F '\t' -v to=${today} '{print "D",$1,"kdb","kdb_daily_liushui",to,$2}' OFS='\t'>${tempfile}
 
-data_insert_kdb -file ${tempfile} -table LW_PJ_AI_KPI_DATA -keys period,ds,origin,kpi_code
+data_insert_kdb -file ${tempfile} -table LW_PJ_AI_KPI_DATA -keys period,ds,origin,kpi_code && rm ${tempfile}
+
+
 
 #osql_kdb -e "delete from LW_PJ_AI_KPI_DATA where kpi_code='kdb_daily_liushui' and ds='$date' and period='D' and origin='kdb';"
 #osql_kdb -e "insert into LW_PJ_AI_KPI_DATA values ('D','$date','kdb','kdb_daily_liushui','$today','$num');
