@@ -40,12 +40,16 @@ while read -r line ;do
     
 done<${AI_TEMP}/script_to_run
 
-#去重任务列表，多进程启动脚本
+#去重任务列表
 sort -u ${AI_TEMP}/tasks_to_run -o ${AI_TEMP}/tasks_to_run
 
-#分割任务运行
-nums=$(expr $(cat tasks_to_run |wc -l) / 15)
-split -l ${nums} tasks_to_run -d -a 2 tasks_to_run_PART
+#合并相邻的日期
+awk '{"date +%F -d \"-"NR"days "$2"\""|getline one;print $1,$2,NR,one}' ${AI_TEMP}/tasks_to_run|awk 'NR==1{a=$1;min=$2;max=$2;c=$4;}{if(a==$1&&c==$4){max=$2;}else{print a,min,max;a=$1;min=$2;max=$2;c=$4;}}END{print a,min,max;}'>${AI_TEMP}/tasks_to_run_combine
+
+
+#分割任务运行,一次后台运行10个任务
+#nums=$(expr $(cat tasks_to_run_combine |wc -l) / 15)
+split -l 10 tasks_to_run_combine -d -a 2 tasks_to_run_PART
 IFS=$'\n' 
 for taskFile in `ls tasks_to_run_PART*`
 do 
