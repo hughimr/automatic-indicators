@@ -42,6 +42,7 @@
     <entry_points version="2.0" />
   </component>
   <component name="ProjectPlainTextFileTypeManager">
+    <file url="file://$PROJECT_DIR$/indicator-script/ai_daily_pv_uv.sh" />
     <file url="file://$PROJECT_DIR$/indicator-script/kdb_daily_cashier_real_money.sh" />
     <file url="file://$PROJECT_DIR$/indicator-script/kdb_daily_cashier_recharge_players_times_money.sh" />
     <file url="file://$PROJECT_DIR$/indicator-script/kdb_daily_consumers.sh" />
